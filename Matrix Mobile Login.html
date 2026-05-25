@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clareity Password-less Mockup</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+        .animate-loading {
+            animation: loading 2s ease-in-out infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        /* Custom scrollbar for dashboard */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .prompt-fade { animation: promptFade 0.2s ease-out forwards; }
+        @keyframes promptFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        const App = () => {
+            const [step, setStep] = useState(0); 
+            const [isMobileOpen, setIsMobileOpen] = useState(false);
+            const [showNotification, setShowNotification] = useState(false);
+            const [mobileSuccess, setMobileSuccess] = useState(false);
+            const [showSystemPrompt, setShowSystemPrompt] = useState(false);
+
+            const steps = [
+                { label: "Initiate Login", desc: "User recognized via device fingerprint." },
+                { label: "Push Sent", desc: "Ping triggers secure push with Denver, CO info." },
+                { label: "Mobile Auth", desc: "User signs challenge via FaceID/Fingerprint." },
+                { label: "SSO Dashboard", desc: "Automatic refresh into authorized workspace." }
+            ];
+
+            const handleNext = () => { if (step < 3) setStep(step + 1); };
+            
+            const handleApprove = (e) => {
+                e.stopPropagation();
+                setIsMobileOpen(true);
+                setStep(2);
+                setTimeout(() => setShowSystemPrompt(true), 150);
+            };
+            
+            const handleDeny = (e) => {
+                e.stopPropagation();
+                setShowNotification(false);
+                setStep(4);
+            };
+            
+            const handleFingerprintClick = () => {
+                setShowSystemPrompt(false);
+                setMobileSuccess(true);
+                setTimeout(() => setStep(3), 800);
+                setTimeout(() => {
+                    setIsMobileOpen(false);
+                    setMobileSuccess(false);
+                    setShowNotification(false);
+                }, 2500);
+            };
+            
+            const handleReset = () => {
+                setStep(0);
+                setIsMobileOpen(false);
+                setShowNotification(false);
+                setMobileSuccess(false);
+                setShowSystemPrompt(false);
+            };
+
+            useEffect(() => {
+                if (step === 1) {
+                    const timer = setTimeout(() => setShowNotification(true), 1200);
+                    return () => clearTimeout(timer);
+                }
+            }, [step]);
+
+            const Dashboard = () => (
+                <div className="h-full w-full bg-[#f8f9fc] flex flex-col fade-in overflow-hidden font-sans">
+                    <header className="bg-white border-b border-gray-200 h-12 flex items-center justify-between px-4 shrink-0">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-[#0b1e3b] p-0.5 rounded">
+                                    <Icon name="shield-check" className="text-white" size={16} />
+                                </div>
+                                <span className="font-bold text-[#0b1e3b] text-[10px] uppercase tracking-tighter">Intermountain MLS</span>
+                            </div>
+                            <nav className="hidden md:flex items-center gap-4 text-[11px] font-medium text-gray-600">
+                                <span className="text-blue-700 font-bold border-b-2 border-blue-700 h-12 flex items-center">Home</span>
+                                <span className="hover:text-blue-700 cursor-pointer">Audience</span>
+                            </nav>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <input type="text" placeholder="Search" className="bg-gray-100 border-none rounded py-1 px-3 pr-8 text-[10px] w-32 focus:ring-1 focus:ring-blue-500 transition-all outline-none" />
+                                <Icon name="search" size={12} className="absolute right-2 top-1.5 text-gray-400" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="relative text-gray-500"><Icon name="bell" size={16} /><span className="absolute -top-1 -right-1 bg-red-500 text-white text-[7px] font-bold px-0.5 rounded-full border border-white">6</span></div>
+                                <div className="w-7 h-7 bg-blue-100 rounded flex items-center justify-center text-blue-700 font-bold text-[10px] border border-blue-200 cursor-pointer">AC</div>
+                            </div>
+                        </div>
+                    </header>
+                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                        <div className="relative w-full h-32 rounded-xl overflow-hidden mb-4 shadow-sm">
+                            <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1200&q=80" className="w-full h-full object-cover grayscale-[20%]" />
+                            <div className="absolute inset-0 bg-black/10"></div>
+                            <div className="absolute bottom-[-10px] left-4 w-16 h-16 bg-white rounded-xl shadow-md border-2 border-white flex items-center justify-center p-1 z-10">
+                                <div className="flex flex-col items-center">
+                                    <Icon name="shield-check" size={24} className="text-[#0b1e3b]" />
+                                    <span className="text-[6px] font-black text-center leading-none mt-1 uppercase text-[#0b1e3b]">Intermountain MLS</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="pl-24 mb-6">
+                            <h1 className="text-xl font-bold text-gray-800 leading-tight">Good Morning, Alejandra!</h1>
+                            <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-500 font-medium">
+                                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full border border-gray-300 flex items-center justify-center"><div className="w-1 h-1 bg-gray-400 rounded-full"></div></div><span>Canada</span></div>
+                                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full border border-blue-600 flex items-center justify-center"><div className="w-1 h-1 bg-blue-600 rounded-full"></div></div><span>USA</span></div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 text-xs mb-3">Applications</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="group cursor-pointer">
+                                        <div className="w-full aspect-square bg-gray-50 rounded-xl mb-1 flex items-center justify-center border border-gray-100 group-hover:border-blue-200 transition-all relative overflow-hidden">
+                                            <div className="absolute top-0 left-0 bg-green-500 text-white text-[6px] font-bold px-1 rounded-br-md">NEW</div>
+                                            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-black text-sm">P</div>
+                                        </div>
+                                        <p className="text-[9px] font-bold text-gray-700 text-center truncate">Playwright</p>
+                                    </div>
+                                    <div className="group cursor-pointer">
+                                        <div className="w-full aspect-square bg-gray-50 rounded-xl mb-1 flex items-center justify-center border border-gray-100 group-hover:border-blue-200 transition-all relative overflow-hidden">
+                                            <div className="absolute top-0 left-0 bg-orange-500 text-white text-[6px] font-bold px-1 rounded-br-md">PRIMARY</div>
+                                            <div className="w-8 h-8 bg-orange-600 rounded flex items-center justify-center text-white font-black text-sm">M</div>
+                                        </div>
+                                        <p className="text-[9px] font-bold text-gray-700 text-center truncate">Abor Matrix</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 text-xs mb-3">Favorites</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="group cursor-pointer">
+                                        <div className="w-full aspect-square bg-gray-50 rounded-xl mb-1 flex items-center justify-center border border-gray-100 group-hover:border-blue-200 transition-all relative overflow-hidden">
+                                            <div className="w-8 h-8 bg-[#0b1e3b] rounded flex items-center justify-center text-white font-black text-sm">R</div>
+                                        </div>
+                                        <p className="text-[9px] font-bold text-gray-700 text-center truncate">Realist SSO</p>
+                                    </div>
+                                    <div className="group cursor-pointer">
+                                        <div className="w-full aspect-square bg-gray-50 rounded-xl mb-1 flex items-center justify-center border border-gray-100 group-hover:border-blue-200 transition-all">
+                                            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-sm shadow-sm">S</div>
+                                        </div>
+                                        <p className="text-[9px] font-bold text-gray-700 text-center truncate">Supra</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-800 text-xs mb-3">News</h3>
+                                <div className="space-y-4">
+                                    <div className="flex gap-2">
+                                        <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=50&q=80" className="w-full h-full object-cover" /></div>
+                                        <div><p className="text-[9px] font-bold text-blue-700 truncate">System Update</p><p className="text-[8px] text-gray-500 line-clamp-2">Listing maintenance schedule.</p></div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0"><img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=50&q=80" className="w-full h-full object-cover" /></div>
+                                        <div><p className="text-[9px] font-bold text-blue-700 truncate">New Tools</p><p className="text-[8px] text-gray-500 line-clamp-2">Check out the new search tools.</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const DesktopView = () => (
+                <div className="flex flex-col h-full bg-[#0b1e3b] overflow-hidden relative font-sans">
+                    <div className="bg-blue-600/20 backdrop-blur-md text-blue-100 text-[10px] px-4 py-1 flex justify-between items-center border-b border-white/10 z-10 shrink-0">
+                        <span className="font-bold tracking-widest uppercase">Desktop Browser Simulation</span>
+                        <div className="flex items-center gap-2"><Icon name="monitor" size={12} /><span>{step === 3 ? 'Authenticated Session' : 'Cotality Secure Access'}</span></div>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+                        {step === 3 ? <Dashboard /> : (
+                            <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] p-8 flex flex-col items-center fade-in">
+                                <div className="flex items-center justify-center gap-2 mb-6">
+                                    <div className="relative">
+                                        <div className="w-8 h-8 bg-[#0b1e3b] rounded-lg rotate-3 flex items-center justify-center shadow-lg"><span className="text-white font-black text-lg -rotate-3">C</span></div>
+                                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border border-white animate-pulse"></div>
+                                    </div>
+                                    <div className="flex flex-col -space-y-1"><span className="text-xl font-black text-[#0b1e3b] tracking-tighter uppercase">Cotality</span><span className="text-[7px] font-bold text-blue-600 tracking-widest uppercase">Secure Identity</span></div>
+                                </div>
+                                {step === 0 ? (
+                                    <div className="w-full space-y-4 fade-in">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-gray-700">Username</label>
+                                            <div className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm text-gray-800 bg-gray-50 font-medium">RachelMLSAgent8</div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-gray-700">Password</label>
+                                            <div className="w-full px-3 py-2.5 border border-gray-300 rounded text-gray-400 bg-white flex justify-between items-center text-sm italic h-[42px]"><span></span><Icon name="eye" size={14} className="text-gray-300" /></div>
+                                        </div>
+                                        <div className="pt-2">
+                                            <button className="w-full bg-gray-200 text-gray-500 font-bold py-2.5 rounded-md mb-2 cursor-not-allowed text-xs">Password Login</button>
+                                            <button onClick={handleNext} className="w-full border-2 border-[#0b1e3b] text-[#0b1e3b] font-bold py-2.5 rounded-md hover:bg-[#0b1e3b] hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm text-xs"><Icon name="info" size={14} /> Passwordless Login</button>
+                                        </div>
+                                    </div>
+                                ) : step === 4 ? (
+                                    <div className="text-center space-y-4 py-6 shake">
+                                        <Icon name="x-circle" size={40} className="text-red-500 mx-auto" />
+                                        <h2 className="text-xl font-bold text-gray-800">Access Denied</h2>
+                                        <p className="text-gray-400 text-[11px] px-4">Request rejected via Assure Mobile.</p>
+                                        <button onClick={handleReset} className="mt-2 text-blue-600 font-bold text-xs hover:underline">Return to login</button>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 space-y-4 fade-in">
+                                        <div className="w-16 h-16 bg-blue-50 text-[#0b1e3b] rounded-full flex items-center justify-center border border-blue-100 animate-pulse mx-auto"><Icon name="lock" size={28} /></div>
+                                        <div className="space-y-1"><h3 className="text-lg font-bold text-gray-800 leading-none">Check Your Phone</h3><p className="text-[11px] text-gray-500 px-6">Push message sent to your <strong>Assure Mobile</strong> device.</p></div>
+                                        <div className="flex justify-center gap-1.5 pt-2"><div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce"></div><div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div><div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div></div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const MobileView = () => (
+                <div className="relative h-[550px] w-[270px] bg-[#111] rounded-[40px] border-[8px] border-[#222] shadow-2xl overflow-hidden ring-4 ring-black/10 shrink-0">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#222] rounded-b-2xl z-50"></div>
+                    <div className="h-full bg-[#050505] relative font-sans">
+                        <div className={`absolute inset-0 transition-opacity duration-1000 ${isMobileOpen ? 'opacity-30 blur-xl' : 'opacity-100'}`}>
+                            <div className="h-full w-full bg-gradient-to-t from-black via-blue-900/40 to-black p-8 flex flex-col justify-between pt-16 items-center">
+                                <div className="text-center"><h1 className="text-5xl font-thin text-white tracking-tight">5:30</h1><p className="text-blue-200 text-sm mt-1">Friday, Feb 6</p></div>
+                            </div>
+                        </div>
+                        {showNotification && !isMobileOpen && (
+                            <div className="absolute top-12 left-2 right-2 fade-in z-40">
+                                <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-3 shadow-2xl border border-white/20">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 bg-[#0b1e3b] rounded-lg flex items-center justify-center text-white shadow-lg shrink-0"><Icon name="lock" size={16} /></div>
+                                        <div className="flex-1">
+                                            <span className="font-bold text-gray-900 text-[8px] uppercase tracking-wider block">Assure Mobile</span>
+                                            <p className="text-[10px] font-bold text-gray-900 leading-tight">Clareity Login Request</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        <button onClick={handleDeny} className="flex-1 bg-gray-100 text-red-600 py-2 rounded-xl text-[9px] font-bold">Deny</button>
+                                        <button onClick={handleApprove} className="flex-1 bg-[#0b1e3b] text-white py-2 rounded-xl text-[9px] font-bold">Approve</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {isMobileOpen && (
+                            <div className="h-full bg-white slide-up flex flex-col relative">
+                                <div className="pt-12 px-4 pb-3 bg-slate-50 border-b shrink-0">
+                                    <div className="flex items-center gap-1.5 mb-1"><Icon name="shield" className="text-blue-600" size={14} /><span className="font-black text-[#0b1e3b] text-sm tracking-tight uppercase">Identity</span></div>
+                                    <p className="text-[8px] text-slate-500 font-bold tracking-widest leading-none">Assure Secure Access</p>
+                                </div>
+                                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-white">
+                                    {mobileSuccess ? (
+                                        <div className="zoom-in space-y-2"><Icon name="check-circle" size={48} className="text-green-500 mx-auto" /><h3 className="text-lg font-black text-gray-900 leading-none">Verified</h3></div>
+                                    ) : (
+                                        <div className="space-y-2"><h3 className="text-lg font-bold text-slate-400">Waiting...</h3><p className="text-[10px] text-slate-400">Challenge requested by SDK.</p></div>
+                                    )}
+                                </div>
+                                {showSystemPrompt && (
+                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-[100] flex flex-col justify-end p-3 fade-in">
+                                        <div className="bg-white rounded-[24px] p-6 shadow-2xl prompt-fade text-center">
+                                            <div className="flex justify-center mb-4">
+                                                <div onClick={handleFingerprintClick} className="w-16 h-16 bg-blue-50 border-2 border-blue-200 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-100 active:scale-95 transition-all">
+                                                    <Icon name="fingerprint" size={32} className="text-blue-600 animate-pulse" />
+                                                </div>
+                                            </div>
+                                            <h2 className="text-sm font-bold text-gray-900 mb-1">Touch ID for Assure</h2>
+                                            <p className="text-[10px] text-gray-500 mb-6">Authorizing sign-in to Portal</p>
+                                            <div className="h-1 w-12 bg-gray-200 rounded-full mx-auto"></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="max-w-7xl mx-auto flex flex-col gap-4 p-4 lg:p-6">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md"><Icon name="shield-check" size={24} /></div>
+                            <div>
+                                <h1 className="text-xl font-black text-slate-800 tracking-tight leading-none uppercase">Cotality <span className="font-light text-slate-400 lowercase">Identity Demo</span></h1>
+                                <p className="text-slate-500 text-[10px] mt-0.5 uppercase tracking-widest font-bold">Secure Browser Session</p>
+                            </div>
+                        </div>
+                        <button onClick={handleReset} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-slate-300 text-slate-700 font-bold text-[10px] uppercase shadow-sm transition-all hover:bg-gray-50 outline-none">
+                            <Icon name="refresh-ccw" size={12} /> Reset
+                        </button>
+                    </div>
+                    <div className="flex flex-col lg:flex-row items-center justify-center gap-8 min-h-[500px] lg:h-[600px]">
+                        <div className="flex-1 w-full h-full flex flex-col items-center">
+                            <div className="w-full h-[450px] lg:h-full bg-white rounded-2xl overflow-hidden shadow-2xl border-[6px] border-white border-b-0 rounded-b-none relative">
+                                <DesktopView />
+                            </div>
+                            <div className="w-[103%] h-4 bg-slate-300 rounded-b-2xl shadow-lg border-t border-slate-400 relative">
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-slate-400 rounded-b-lg"></div>
+                            </div>
+                        </div>
+                        <div className="shrink-0 scale-90 lg:scale-100 origin-center">
+                            <MobileView />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
